@@ -60,7 +60,7 @@ def multinomial_logreg_grad(Xs, Ys, gamma, W):
     dummy, n=numpy.shape(Xs)
     grad= numpy.zeros((c,d)) # gradient has the same size as W
     H=mult_logreg_pred(W,Xs)
-    signed_error=Ys*(H-1)
+    signed_error=(H-Ys)
     grad=(numpy.matmult(signed_error,Xs.T))/n+gamma*W
     return grad
 
@@ -98,7 +98,17 @@ def multinomial_logreg_error(Xs, Ys, W):
 # returns       a list of models parameters, one every "monitor_freq" iterations
 def gradient_descent(Xs, Ys, gamma, W0, alpha, num_iters, monitor_freq):
     # TODO students should implement this
-
+    param_list=[]
+    W_prev=W0;
+    j=0;
+    for i in range(num_iters):
+        j+=1
+        grad_f = multinomial_logreg_grad(Xs, Ys, gamma, W_prev);
+        W_next = W_prev - alpha*grad_f
+        if j == monitor_freq:
+            param_list.append(W_next)
+            j=0
+    return param_list=[]
 
 # estimate the error of the classifier
 #
@@ -108,10 +118,10 @@ def gradient_descent(Xs, Ys, gamma, W0, alpha, num_iters, monitor_freq):
 # W         parameters        (c * d)
 # nsamples  number of samples to use for the estimation
 #
-# returns   the gradient
+# returns   the error of the model
 def estimate_multinomial_logreg_error(Xs, Ys, W, nsamples):
     # TODO students should implement this
-
+    random_samples=
 
 if __name__ == "__main__":
     (Xs_tr, Ys_tr, Xs_te, Ys_te) = load_MNIST_dataset()
