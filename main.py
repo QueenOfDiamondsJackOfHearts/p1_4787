@@ -40,7 +40,7 @@ def load_MNIST_dataset():
 # W         parameters       (c * d)
 #
 #returns preds, a (c * n) matrix of predictions
-def mult_logreg_pred(W,X)
+def mult_logreg_pred(W,X):
     WX= numpy.matmul(W,X) #apply the linear parameters
     preds=scipy.special.softmax(WX, axis=0) # apply softmax with respect to each observation
 
@@ -75,14 +75,18 @@ def multinomial_logreg_error(Xs, Ys, W):
     # TODO students should implement this
     preds_real=mult_logreg_pred(W,Xs)
     c, n = numpy.shape(preds_real)
-    pred_lables=(np.zeros((c,n))+(1==preds_real/np.max(preds_real,axis=0)))
+    pred_lables=np.zeros((c,n))
+    label_position=numpy.argmax(preds_real,axis=0)
+    for j,i in enumerate(label_position):
+        pred_lables[i,j]=1
+    #pred_lables=(np.zeros((c,n))+(1==preds_real/np.max(preds_real,axis=0)))
     #The above finds the max in each row and returns a matrix which has 1 at the greatet
     # probablility, and zero else where
-    accuracy=(numpy.sum(numpy.max(pred_labels+Ys,axis=0))-n/n)
+    accuracy=numpy.trace(numpy.matmult(Ys,pred_lables.T))/n
     # we sum the vectors which only have one value equal to 1 in each column. thus the maximum
     # value per column is 2, which happens only if the lables agree. (sum(maxima)-n)/n gives accuracy
 
-    error_percent=1-accuracy*100
+    error_percent=100-accuracy*100
     return error_percent
 
 # run gradient descent on a multinomial logistic regression objective, with regularization
@@ -121,8 +125,13 @@ def gradient_descent(Xs, Ys, gamma, W0, alpha, num_iters, monitor_freq):
 # returns   the error of the model
 def estimate_multinomial_logreg_error(Xs, Ys, W, nsamples):
     # TODO students should implement this
-    random_samples=
+    n = np.shape(Xs)[1]
+    random_samples = numpy.random.randint(n, size=(1, nsample))
+    X_subsample = Xs[:,random_samples]
+    Y_subsample = Ys[:,random_samples]
+    approx_error = multinomial_logreg_error(X_subsample, Y_subsample, W)
 
 if __name__ == "__main__":
     (Xs_tr, Ys_tr, Xs_te, Ys_te) = load_MNIST_dataset()
     # TODO add code to produce figures
+
