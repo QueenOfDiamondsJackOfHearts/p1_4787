@@ -4,33 +4,34 @@ import scipy
 import matplotlib
 import mnist
 import pickle
+import scipy.special
 matplotlib.use('agg')
 from matplotlib import pyplot
 
 mnist_data_directory = os.path.join(os.path.dirname(__file__), "data")
 
 # TODO add any additional imports and global variables
-def run_and_plot(reg, step, iter, X_train, Y_train, X_val, Y_val, W0, num_iters, mon_freq):
-    Ws = gradient_descent(X_train, Y_train, gamma, W0, alpha,num_iters, mon_freq )
+def run_and_plot(gamma, X_train, Y_train, X_val, Y_val, W0, alpha, num_iters, mon_freq):
+    Ws = gradient_descent(X_train, Y_train, gamma, W0, alpha, num_iters, mon_freq)
     plot_given_W_vectors(X_train, X_val, Y_train, Y_val, Ws, 100)
     plot_given_W_vectors(X_train, X_val, Y_train, Y_val, Ws, 1000)
 
 
 def plot_given_W_vectors(X_train, X_val, Y_train, Y_val, Ws, nsamples):
-    y = np.zeros(2, len(Ws))
-    x = np.zeros(1, len(Ws))
+    y = numpy.zeros(2, len(Ws))
+    x = numpy.zeros(1, len(Ws))
     for i in range(len(Ws)):
         y[0, i]= multinomial_logreg_error(X_train, Y_train, W)
-        y[0, i] = estimate_multinomial_logreg_error(X_train, Y_train, W, nsamples)
+        y[1, i] = estimate_multinomial_logreg_error(X_train, Y_train, W, nsamples)
         x[i] = i
-        plot(x, y[0, :], x, y[1, :])
-    y = np.zeros(2, len(Ws) / 10)
-    x = np.zeros(1, len(Ws) / 10)
+        pyplot.plot(x, y[0, :], x, y[1, :])
+    y = numpy.zeros(2, len(Ws) / 10)
+    x = numpy.zeros(1, len(Ws) / 10)
     for i in range(len(Ws)):
         y[0, i]= multinomial_logreg_error(X_val, Y_val, W)
-        y[0, i] = estimate_multinomial_logreg_error(X_val Y_val, W, nsamples)
+        y[1, i] = estimate_multinomial_logreg_error(X_val, Y_val, W, nsamples)
         x[i] = i
-        plot(x, y[0, :], x, y[1, :])
+        pyplot.plot(x, y[0, :], x, y[1, :])
 
 
 def load_MNIST_dataset():
@@ -96,18 +97,18 @@ def multinomial_logreg_error(Xs, Ys, W):
     # TODO students should implement this
     preds_real=mult_logreg_pred(W,Xs)
     c, n = numpy.shape(preds_real)
-    pred_lables=np.zeros((c,n))
+    pred_lables=numpy.zeros((c,n))
     label_position=numpy.argmax(preds_real,axis=0)
     for j,i in enumerate(label_position):
         pred_lables[i,j]=1
-    #pred_lables=(np.zeros((c,n))+(1==preds_real/np.max(preds_real,axis=0)))
+    #pred_lables=(numpy.zeros((c,n))+(1==preds_real/numpy.max(preds_real,axis=0)))
     #The above finds the max in each row and returns a matrix which has 1 at the greatet
     # probablility, and zero else where
     accuracy=numpy.trace(numpy.matmul(Ys,pred_lables.T))/n
     # we sum the vectors which only have one value equal to 1 in each column. thus the maximum
     # value per column is 2, which happens only if the lables agree. (sum(maxima)-n)/n gives accuracy
 
-error_percent=100-accuracy*100
+    error_percent=100-accuracy*100
     return error_percent
 
 # run gradient descent on a multinomial logistic regression objective, with regularization
@@ -146,7 +147,7 @@ def gradient_descent(Xs, Ys, gamma, W0, alpha, num_iters, monitor_freq):
 # returns   the error of the model
 def estimate_multinomial_logreg_error(Xs, Ys, W, nsamples):
     # TODO students should implement this
-    n = np.shape(Xs)[1]
+    n = numpy.shape(Xs)[1]
     random_samples = numpy.random.randint(n, size=(1, nsamples)).flatten()
     X_subsample = Xs[:,random_samples]
     Y_subsample = Ys[:,random_samples]
@@ -155,8 +156,8 @@ def estimate_multinomial_logreg_error(Xs, Ys, W, nsamples):
 
 if __name__ == "__main__":
     (Xs_tr, Ys_tr, Xs_te, Ys_te) = load_MNIST_dataset()
-    d= Xs_tr.shape()[0]
-    c= Ys_tr.shape()[0]
-    W0 = np.zeros(c,d)
-    run_and_plot(.0001, 1, 1000, Xs_tr, Ys_tr, Xs_te, Ys_te, W0)
+    d= Xs_tr.shape[0]
+    c= Ys_tr.shape[0]
+    W0 = numpy.zeros((c,d))
+    run_and_plot(.0001, Xs_tr, Ys_tr, Xs_te, Ys_te, W0, 1000, 10)
 
