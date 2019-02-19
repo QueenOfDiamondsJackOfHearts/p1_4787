@@ -6,32 +6,13 @@ import mnist
 import pickle
 import scipy.special
 matplotlib.use('agg')
-from matplotlib import pyplot
+from matplotlib import pyplot as plt
+import time
 
 mnist_data_directory = os.path.join(os.path.dirname(__file__), "data")
 
 # TODO add any additional imports and global variables
-def run_and_plot(gamma, X_train, Y_train, X_val, Y_val, W0, alpha, num_iters, mon_freq):
-    Ws = gradient_descent(X_train, Y_train, gamma, W0, alpha, num_iters, mon_freq)
-    plot_given_W_vectors(X_train, X_val, Y_train, Y_val, Ws, 100)
-    plot_given_W_vectors(X_train, X_val, Y_train, Y_val, Ws, 1000)
 
-
-def plot_given_W_vectors(X_train, X_val, Y_train, Y_val, Ws, nsamples):
-    y = numpy.zeros(2, len(Ws))
-    x = numpy.zeros(1, len(Ws))
-    for i in range(len(Ws)):
-        y[0, i]= multinomial_logreg_error(X_train, Y_train, W)
-        y[1, i] = estimate_multinomial_logreg_error(X_train, Y_train, W, nsamples)
-        x[i] = i
-        pyplot.plot(x, y[0, :], x, y[1, :])
-    y = numpy.zeros(2, len(Ws) / 10)
-    x = numpy.zeros(1, len(Ws) / 10)
-    for i in range(len(Ws)):
-        y[0, i]= multinomial_logreg_error(X_val, Y_val, W)
-        y[1, i] = estimate_multinomial_logreg_error(X_val, Y_val, W, nsamples)
-        x[i] = i
-        pyplot.plot(x, y[0, :], x, y[1, :])
 
 
 def load_MNIST_dataset():
@@ -134,6 +115,10 @@ def gradient_descent(Xs, Ys, gamma, W0, alpha, num_iters, monitor_freq):
         if j == monitor_freq:
             param_list.append(W_next)
             j=0
+            print("difference in W's",numpy.linalg.norm(W_prev-W_next))
+        W_prev=W_next
+
+
     return param_list
 
 # estimate the error of the classifier
@@ -158,6 +143,81 @@ if __name__ == "__main__":
     (Xs_tr, Ys_tr, Xs_te, Ys_te) = load_MNIST_dataset()
     d= Xs_tr.shape[0]
     c= Ys_tr.shape[0]
-    W0 = numpy.zeros((c,d))
-    run_and_plot(.0001, Xs_tr, Ys_tr, Xs_te, Ys_te, W0, 1000, 10)
+    
+    #establish local variables
+    monitor_freq = 10
+    gamma = 0.0001
+    alpha = 1
+    num_iters = 1000
+    W0 = numpy.random.rand(c,d) # we chose initialization with all zeros
 
+    #first we run gradient descent
+    Ws = gradient_descent(Xs_tr, Ys_tr, gamma, W0, alpha, num_iters, monitor_freq)
+
+    #now having the list of weights we create plots of the errors
+    iteration = range(monitor_freq,(len(Ws)+1)*monitor_freq,monitor_freq)
+    errors_true_train = []
+    errors_true_test = []
+    errors_est_train_100 = []
+    errors_est_test_100 = []
+    errors_est_train_1000 = []
+    errors_est_test_1000 = []
+    for W in Ws:
+        errors_true_train.append(multinomial_logreg_error(Xs_tr, Ys_tr, W))
+        errors_true_test.append(multinomial_logreg_error(Xs_te, Ys_te, W))
+        errors_est_train_100.append(estimate_multinomial_logreg_error(Xs_tr, Ys_tr, W, 100))
+        errors_est_test_100.append(estimate_multinomial_logreg_error(Xs_te, Ys_te, W, 100))
+        errors_est_train_1000.append(estimate_multinomial_logreg_error(Xs_tr, Ys_tr, W, 1000))
+        errors_est_test_1000.append(estimate_multinomial_logreg_error(Xs_te, Ys_te, W, 1000))
+    
+    plt.figure()
+    plt.title("error measurements on training set over each iteration")
+    plt.xlabel("iteration")
+    plt.ylabel("error")
+    plt.plot(iteration,errors_true_train, 'r-')
+    plt.plot(iteration,errors_est_train_100, 'g-')
+    plt.plot(iteration,errors_est_train_1000, 'b-')
+    plt.savefig("train_errs.pdf")
+
+
+    plt.figure()
+    plt.title("error measurements on testing set over each iteration")
+    plt.xlabel("iteration")
+    plt.ylabel("error")
+    plt.plot(iteration,errors_true_test, 'r-')
+    plt.plot(iteration,errors_est_test_100, 'g-')
+    plt.plot(iteration,errors_est_test_1000, 'b-')
+    plt.savefig("test_errs.pdf")
+
+# finaly we compare the runtime of the error estimates
+    start_time=time.time()
+    multinomial_logreg_error(Xs_tr, Ys_tr, W)
+    error_full_tr=start_time-time.time()
+
+    start_time=time.time()
+    multinomial_logreg_error(Xs_te, Ys_te, W)
+    error_full_te=start_time-time.time()
+
+    start_time=time.time()
+    estimate_multinomial_logreg_error(Xs_tr, Ys_tr, W, 100)
+    error_est_tr_100=start_time-time.time()
+
+    start_time=time.time()
+    estimate_multinomial_logreg_error(Xs_te, Ys_te, W, 100)
+    error_est_te_100=start_time-time.time()
+
+    start_time=time.time()
+    estimate_multinomial_logreg_error(Xs_tr, Ys_tr, W, 1000)
+    error_est_tr_1000=start_time-time.time()
+
+    start_time=time.time()
+    estimate_multinomial_logreg_error(Xs_te, Ys_te, W, 1000)
+    error_est_te_1000=start_time-time.time()
+
+    print("full evaluation of error on training set runtime: ",error_full_tr)
+    print("estimate (100) evaluation of error on training set runtime: ",error_est_tr_100)
+    print("estimate (1000) evaluation of error on training set runtime: ",error_est_tr_1000)
+    print("\n")
+    print("full evaluation of error on test set runtime: ",error_full_te)
+    print("estimate (100) evaluation of error on test set runtime: ",error_est_te_100)
+    print("estimate (1000) evaluation of error on test set runtime: ",error_est_te_1000)
